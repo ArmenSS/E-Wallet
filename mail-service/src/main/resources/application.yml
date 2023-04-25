@@ -1,0 +1,33 @@
+server:
+    port: 8080
+
+jwt:
+    secret: secret
+    expiration: 50000
+
+spring:
+    datasource:
+        url: jdbc:postgresql://localhost:5432/e_wallet_mail
+        username: postgres
+        password: postgres
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        hibernate:
+            ddl-auto: create
+        show-sql: true
+
+    mail:
+        properties:
+            mail:
+                smtp:
+                    starttls:
+                        enable: 'true'
+                    auth: 'true'
+        host: smtp.gmail.com
+        username: poxosikyan@gmail.com
+        password: poxosikyan@gmail
+        port: '587'
+
+mail:
+    verify:
+        url: http://localhost:8081/user/verify/
