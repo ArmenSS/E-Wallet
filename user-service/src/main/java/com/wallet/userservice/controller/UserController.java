@@ -75,8 +75,8 @@ public class UserController {
      * @param loginRequest
      * @return UserAuthResponse This controller for login write your correct login and password
      */
-    @GetMapping("/auth")
-    public UserAuthResponse auth(@PathVariable LoginRequest loginRequest) {
+    @PostMapping("/auth")
+    public UserAuthResponse auth(@RequestBody LoginRequest loginRequest) {
         return userService.auth(loginRequest);
     }
 }
