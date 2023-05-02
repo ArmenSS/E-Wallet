@@ -1,0 +1,23 @@
+server:
+    port: 8081
+
+jwt:
+    secret: secret
+    expiration: 50000
+    refresh:
+        expiration: 50000
+
+mail:
+    verify:
+        url: http://localhost:8081/user/verify/
+
+spring:
+    datasource:
+        url: jdbc:postgresql://localhost:5432/e_wallet_users
+        username: postgres
+        password: postgres
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
