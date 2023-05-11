@@ -31,3 +31,10 @@ spring:
 mail:
     verify:
         url: http://localhost:8081/user/verify/
+
+eureka:
+    client:
+        serviceUrl:
+            defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+    instance:
+        preferIpAddress: true

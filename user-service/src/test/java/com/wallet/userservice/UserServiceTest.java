@@ -2,7 +2,9 @@ package com.wallet.userservice;
 
 import com.wallet.userservice.dto.UserDto;
 import com.wallet.userservice.entity.UserEntity;
+import com.wallet.userservice.exception.EntityNotFoundException;
 import com.wallet.userservice.feign.MailClient;
+import com.wallet.userservice.feign.TransactionServiceClient;
 import com.wallet.userservice.mapper.UserMapper;
 import com.wallet.userservice.repository.UserRepository;
 import com.wallet.userservice.service.impl.UserServiceImpl;
@@ -14,12 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +34,8 @@ public class UserServiceTest {
 
     @Mock
     private MailClient mailClient;
+    @Mock
+    private TransactionServiceClient transactionServiceClient;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -64,6 +66,7 @@ public class UserServiceTest {
         assertEquals(userDto, result);
     }
 
+    @Test
     public void testFindByIdNotFound() {
         Long id = 1L;
         when(userRepository.findById(id)).thenReturn(Optional.empty());

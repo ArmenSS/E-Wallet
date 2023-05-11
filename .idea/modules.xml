@@ -2,8 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/E-Wallet.iml" filepath="$PROJECT_DIR$/.idea/E-Wallet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/card_service/card_service.iml" filepath="$PROJECT_DIR$/card_service/card_service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/e-wallet.iml" filepath="$PROJECT_DIR$/e-wallet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/netflix-eureka/eureka-server/eureka-server.iml" filepath="$PROJECT_DIR$/netflix-eureka/eureka-server/eureka-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/netflix-eureka/gateway-server/gateway-server.iml" filepath="$PROJECT_DIR$/netflix-eureka/gateway-server/gateway-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/mail-service/mail-service.iml" filepath="$PROJECT_DIR$/mail-service/mail-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/netflix-eureka/netflix-eureka.iml" filepath="$PROJECT_DIR$/netflix-eureka/netflix-eureka.iml" />
       <module fileurl="file://$PROJECT_DIR$/user-service/user-service.iml" filepath="$PROJECT_DIR$/user-service/user-service.iml" />
     </modules>
   </component>
