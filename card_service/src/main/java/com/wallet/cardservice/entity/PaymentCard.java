@@ -23,7 +23,6 @@ public class PaymentCard {
     @Size(min = 16, max = 16, message = "card number must be 16 digits long")
     private String cardNumber;
     private String nameAndSurname;
-//    @JsonFormat(pattern="yyyy-MM-dd")
     private String expirationDate;
     private String cvv;
 

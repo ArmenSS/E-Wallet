@@ -4,18 +4,17 @@ package com.wallet.cardservice;
 import com.wallet.cardservice.dto.PaymentCardDto;
 import com.wallet.cardservice.entity.PaymentCard;
 import com.wallet.cardservice.exception.CardDateExpiredException;
-import com.wallet.cardservice.exception.InvalidCardNumberException;
 import com.wallet.cardservice.mapper.PaymentCardMapper;
 import com.wallet.cardservice.repo.PaymentCardRepository;
 import com.wallet.cardservice.service.serviceImpl.PaymentCardServiceImpl;
 import com.wallet.userservice.entity.UserEntity;
-import org.aspectj.lang.annotation.Before;
+import com.wallet.userservice.entity.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -25,8 +24,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -41,53 +41,91 @@ public class PaymentCardServiceImplTest {
     @InjectMocks
     private PaymentCardServiceImpl paymentCardService;
 
-    private UserEntity userEntity;
-
     private PaymentCard paymentCard;
 
     private PaymentCardDto paymentCardDto;
 
     @BeforeEach
     public void setUp() {
-        userEntity = new UserEntity();
+        UserEntity userEntity = new UserEntity();
         userEntity.setId(1L);
-
         paymentCard = new PaymentCard();
-        paymentCard.setCardNumber("4916471077890409");
-        paymentCard.setExpirationDate("04/25");
-
         paymentCardDto = new PaymentCardDto();
         paymentCardDto.setId(1L);
-        paymentCardDto.setCardNumber("4916471077890409");
-        paymentCardDto.setExpirationDate("04/25");
-
-        Mockito.when(paymentCardMapper.toDto(paymentCard)).thenReturn(paymentCardDto);
-        Mockito.when(paymentCardMapper.toEntity(paymentCardDto)).thenReturn(paymentCard);
+        paymentCardService = new PaymentCardServiceImpl(paymentCardRepository, paymentCardMapper);
+        when(paymentCardMapper.toDto(paymentCard)).thenReturn(paymentCardDto);
+        when(paymentCardMapper.toEntity(paymentCardDto)).thenReturn(paymentCard);
     }
 
     @Test
-    public void testAddPaymentCard_InvalidCardNumberException() {
+    public void testAddPaymentCard_validCard_success() {
+        UserEntity userEntity = new UserEntity();
         PaymentCard paymentCard = new PaymentCard();
-        paymentCard.setCardNumber("12345678");
-        assertThrows(
-                InvalidCardNumberException.class,
-                () -> paymentCardService.addPaymentCard(userEntity, paymentCard));
+        paymentCard.setExpirationDate("12/2025");
+
+        when(paymentCardRepository.save(any(PaymentCard.class))).thenReturn(paymentCard);
+
+        assertDoesNotThrow(() -> paymentCardService.addPaymentCard(userEntity, paymentCard));
+
+        verify(paymentCardRepository, times(1)).save(paymentCard);
     }
 
     @Test
-    public void testAddPaymentCard_CardDateExpiredException() {
+    public void testAddPaymentCard_expiredCard_exceptionThrown() {
+        UserEntity userEntity = new UserEntity();
         PaymentCard paymentCard = new PaymentCard();
-        paymentCard.setCardNumber("4916471077890409");
-        paymentCard.setExpirationDate("04/21");
-        assertThrows(InvalidCardNumberException.class,
-                () ->
-                        paymentCardService.addPaymentCard(userEntity, paymentCard));
+        paymentCard.setExpirationDate("12/2020");
+
+        assertThrows(CardDateExpiredException.class, () -> paymentCardService.addPaymentCard(userEntity, paymentCard));
+
+        verify(paymentCardRepository, never()).save(paymentCard);
     }
 
+    @Test
+    public void testFindAll_userRoleUser_returnDtoList() {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setUserRole(UserRole.USER);
+
+        List<PaymentCard> paymentCards = new ArrayList<>();
+        paymentCards.add(new PaymentCard());
+        paymentCards.add(new PaymentCard());
+
+        when(paymentCardRepository.findAllByUserId(userEntity.getId())).thenReturn(paymentCards);
+        when(paymentCardMapper.toDto(paymentCards)).thenReturn(new ArrayList<>());
+
+        List<PaymentCardDto> result = paymentCardService.findAll(userEntity);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+
+        verify(paymentCardRepository, times(1)).findAllByUserId(userEntity.getId());
+        verify(paymentCardMapper, times(1)).toDto(paymentCards);
+    }
+
+    @Test
+    public void testFindAll_userRoleAdmin_returnAllDtoList() {
+        UserEntity userEntity = new UserEntity();
+        userEntity.setUserRole(UserRole.ADMIN);
+
+        List<PaymentCard> paymentCards = new ArrayList<>();
+        paymentCards.add(new PaymentCard());
+        paymentCards.add(new PaymentCard());
+
+        when(paymentCardRepository.findAll()).thenReturn(paymentCards);
+        when(paymentCardMapper.toDto(paymentCards)).thenReturn(new ArrayList<>());
+
+        List<PaymentCardDto> result = paymentCardService.findAll(userEntity);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+
+        verify(paymentCardRepository, times(1)).findAll();
+        verify(paymentCardMapper, times(1)).toDto(paymentCards);
+    }
 
     @Test
     public void testFindById() {
-        Mockito.when(paymentCardRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(paymentCard));
+        when(paymentCardRepository.findById(anyLong())).thenReturn(Optional.of(paymentCard));
         PaymentCardDto found = paymentCardService.findById(1L);
         assertEquals(paymentCardDto, found);
     }
@@ -95,14 +133,14 @@ public class PaymentCardServiceImplTest {
     @Test
     public void testDelete() {
         paymentCardService.delete(1L);
-        Mockito.verify(paymentCardRepository, Mockito.times(1)).deleteById(1L);
+        verify(paymentCardRepository, times(1)).deleteById(1L);
     }
 
     @Test
     public void testUpdate() {
         paymentCardDto.setCardNumber("1234567812345679");
-        Mockito.when(paymentCardRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(paymentCard));
-        Mockito.when(paymentCardRepository.save(Mockito.any(PaymentCard.class))).thenReturn(paymentCard);
+        when(paymentCardRepository.findById(anyLong())).thenReturn(Optional.of(paymentCard));
+        when(paymentCardRepository.save(any(PaymentCard.class))).thenReturn(paymentCard);
         PaymentCardDto updated = paymentCardService.update(paymentCardDto);
         assertEquals(paymentCardDto, updated);
     }
@@ -112,8 +150,8 @@ public class PaymentCardServiceImplTest {
         List<PaymentCard> paymentCards = new ArrayList<>();
         paymentCards.add(paymentCard);
 
-        Mockito.when(paymentCardRepository.findAllByUserId(Mockito.anyLong())).thenReturn(paymentCards);
-        Mockito.when(paymentCardMapper.toDto(Mockito.anyList())).thenReturn(Collections.singletonList(paymentCardDto));
+        when(paymentCardRepository.findAllByUserId(anyLong())).thenReturn(paymentCards);
+        when(paymentCardMapper.toDto(anyList())).thenReturn(Collections.singletonList(paymentCardDto));
 
         List<PaymentCardDto> found = paymentCardService.findByUserId(1L);
         assertEquals(1, found.size());

@@ -3,7 +3,6 @@ package com.wallet.cardservice.service.serviceImpl;
 import com.wallet.cardservice.dto.PaymentCardDto;
 import com.wallet.cardservice.entity.PaymentCard;
 import com.wallet.cardservice.exception.CardDateExpiredException;
-import com.wallet.cardservice.exception.InvalidCardNumberException;
 import com.wallet.cardservice.mapper.PaymentCardMapper;
 import com.wallet.cardservice.repo.PaymentCardRepository;
 import com.wallet.cardservice.service.PaymentCardService;
@@ -32,6 +31,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     public void addPaymentCard(UserEntity userEntity, PaymentCard paymentCard) throws IllegalArgumentException {
         if (paymentCard.getExpirationDate().matches(DATE_REGEX)) {
             throw new CardDateExpiredException();
+        } else if (!isValidExpirationDate(paymentCard.getExpirationDate())) {
+            throw new CardDateExpiredException();
         } else {
             paymentCard.setUserId(userEntity.getId());
             paymentCardRepository.save(paymentCard);
@@ -41,9 +42,8 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public List<PaymentCardDto> findAll(UserEntity userEntity) {
         if (userEntity.getUserRole().equals(UserRole.USER)) {
-            List<PaymentCardDto> paymentCardDto = paymentCardMapper
+            return paymentCardMapper
                     .toDto(paymentCardRepository.findAllByUserId(userEntity.getId()));
-            return paymentCardDto;
         } else {
             return paymentCardMapper.toDto(paymentCardRepository.findAll());
         }
@@ -70,23 +70,6 @@ public class PaymentCardServiceImpl implements PaymentCardService {
     @Override
     public List<PaymentCardDto> findByUserId(Long userId) {
         return paymentCardMapper.toDto(paymentCardRepository.findAllByUserId(userId));
-    }
-
-    private boolean isValidCardNumber(String cardNumber) {
-        int sum = 0;
-        boolean alternate = false;
-        for (int i = cardNumber.length() - 1; i >= 0; i--) {
-            int n = Integer.parseInt(cardNumber.substring(i, i + 1));
-            if (alternate) {
-                n *= 2;
-                if (n > 9) {
-                    n = (n % 10) + 1;
-                }
-            }
-            sum += n;
-            alternate = !alternate;
-        }
-        return (sum % 10 == 0);
     }
 
     private boolean isValidExpirationDate(String expirationDate) {
