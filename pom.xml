@@ -15,6 +15,7 @@
         <module>user-service</module>
         <module>netflix-eureka</module>
         <module>card_service</module>
+        <module>transaction-service</module>
     </modules>
 
     <properties>

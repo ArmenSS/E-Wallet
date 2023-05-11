@@ -32,7 +32,7 @@ spring:
         - id: mail-service
           uri: lb://mail-service
           predicates:
-            Path=/mail/**
+            - Path=/mail/**
           filters:
             - AuthFilter
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
@@ -40,7 +40,7 @@ spring:
         - id: transaction-service
           uri: lb://transaction-service
           predicates:
-            Path=/transaction/**
+            - Path=/transaction/**, /transaction-history/**, /balance-history/**
           filters:
             - AuthFilter
             - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
