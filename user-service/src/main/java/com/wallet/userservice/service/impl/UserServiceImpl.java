@@ -42,6 +42,9 @@ public class UserServiceImpl implements UserService {
     @Value("${jwt.refresh.expiration}")
     private Long refreshExpiration;
 
+    @Value("${mail.verification}")
+    private boolean turnOnMailVerification;
+
     @Value("${mail.verify.url}")
     private String MAIL_VERIFY_URL;
 
@@ -97,16 +100,21 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = userMapper.toEntity(userDto);
         userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
         userEntity.setMailVerifyToken(UUID.randomUUID());
+        if (turnOnMailVerification){
+            userEntity.setMailVerified(false);
+            MailVerifyDto mailVerifyDto = MailVerifyDto.builder()
+                    .name(userDto.getName())
+                    .surname(userDto.getSurname())
+                    .email(userDto.getEmail())
+                    .mailVerificationLink(MAIL_VERIFY_URL + userEntity.getMailVerifyToken())
+                    .build();
+            mailClient.sendMail(mailVerifyDto);
+        }else {
+            userEntity.setMailVerified(true);
+        }
         UserEntity save = userRepository.save(userEntity);
-        UserDto userDto1 = userMapper.toDto(save);
-        MailVerifyDto mailVerifyDto = MailVerifyDto.builder()
-                .name(userDto.getName())
-                .surname(userDto.getSurname())
-                .email(userDto.getEmail())
-                .mailVerificationLink(MAIL_VERIFY_URL + userEntity.getMailVerifyToken())
-                .build();
-        mailClient.sendMail(mailVerifyDto);
-        return userDto1;
+        transactionServiceClient.createBalance(save.getId());
+        return userMapper.toDto(save);
     }
 
 
@@ -159,7 +167,6 @@ public class UserServiceImpl implements UserService {
             user.setMailVerified(true);
             user.setMailVerifyToken(null);
             userRepository.save(user);
-            transactionServiceClient.createBalance(user.getId());
             return "email verifed successfully";
         }
     }

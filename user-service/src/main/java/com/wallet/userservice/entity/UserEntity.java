@@ -26,7 +26,7 @@ public class UserEntity {
     @Enumerated
     private UserRole userRole;
     private UUID mailVerifyToken;
-    private boolean isMailVerified = false;
+    private boolean isMailVerified;
     private String phoneNumber;
     private int age;
     @Enumerated

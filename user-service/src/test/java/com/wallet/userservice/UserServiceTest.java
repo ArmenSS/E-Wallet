@@ -109,7 +109,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testVerifyUserByEmailToken_validToken_success() {
+    public void testVerifyUserByEmailTokenvalidTokensuccess() {
         UUID uuid = UUID.randomUUID();
         String token = uuid.toString();
         String email = "test@example.com";

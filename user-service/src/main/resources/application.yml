@@ -10,6 +10,7 @@ jwt:
 mail:
     verify:
         url: http://localhost:8081/user/verify/
+    verification: false
 
 spring:
     application:
