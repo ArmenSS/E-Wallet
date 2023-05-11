@@ -7,19 +7,31 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="mail-service" />
+        <module name="gateway-server" />
         <module name="user-service" />
+        <module name="card_service" />
+        <module name="mail-service" />
+        <module name="eureka-server" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="E-Wallet" target="11" />
+      <module name="card_service" target="11" />
+      <module name="e-wallet" target="11" />
+      <module name="eureka-server" target="11" />
+      <module name="gateway-server" target="11" />
       <module name="mail-service" target="11" />
+      <module name="netflix-eureka" target="11" />
+      <module name="transaction-service" target="11" />
       <module name="user-service" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="card_service" options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
+      <module name="gateway-server" options="-parameters" />
       <module name="mail-service" options="-parameters" />
+      <module name="transaction-service" options="-parameters" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>

@@ -21,4 +21,6 @@ public interface UserService {
 
     UserDto update(UserDto userDto);
 
+    UserDto findByCard(UserDto userDto);
+
 }

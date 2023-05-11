@@ -49,7 +49,7 @@ public class MailServiceImpl implements MailService {
 
             Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
                 protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(from, "Aa1234567!a");
+                    return new PasswordAuthentication(from, "wbcudvrceatlagqw");
                 }
             });
 

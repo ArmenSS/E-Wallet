@@ -13,6 +13,8 @@
     <modules>
         <module>mail-service</module>
         <module>user-service</module>
+        <module>netflix-eureka</module>
+        <module>card_service</module>
     </modules>
 
     <properties>
