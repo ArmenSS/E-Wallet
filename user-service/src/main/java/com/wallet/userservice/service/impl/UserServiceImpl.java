@@ -6,10 +6,9 @@ import com.wallet.userservice.dto.UserAuthResponse;
 import com.wallet.userservice.dto.UserDto;
 import com.wallet.userservice.entity.UserEntity;
 import com.wallet.userservice.entity.UserRole;
-import com.wallet.userservice.exception.DuplicateUserException;
-import com.wallet.userservice.exception.IncorrectPasswordException;
-import com.wallet.userservice.exception.UnVerifiedEmailUserException;
+import com.wallet.userservice.exception.*;
 import com.wallet.userservice.feign.MailClient;
+import com.wallet.userservice.feign.TransactionServiceClient;
 import com.wallet.userservice.mapper.UserMapper;
 import com.wallet.userservice.repository.UserRepository;
 import com.wallet.userservice.security.JwtTokenUtil;
@@ -18,12 +17,10 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -37,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final MailClient mailClient;
     private final JwtTokenUtil jwtTokenUtil;
+    private final TransactionServiceClient transactionServiceClient;
 
     @Value("${jwt.expiration}")
     private Long expiration;
@@ -44,8 +42,16 @@ public class UserServiceImpl implements UserService {
     @Value("${jwt.refresh.expiration}")
     private Long refreshExpiration;
 
+    @Value("${mail.verification}")
+    private boolean turnOnMailVerification;
+
     @Value("${mail.verify.url}")
     private String MAIL_VERIFY_URL;
+
+    private static final String PASSWORD_REGEX =
+            "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>.%]).{8,18}$";
+    private static final String EMAIL_REGEX =
+            "^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
 
 
     @Override
@@ -82,20 +88,33 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByEmail(userDto.getEmail()).isPresent()) {
             throw new DuplicateUserException();
         }
+        if (!userDto.getPassword().matches(PASSWORD_REGEX)) {
+            log.error(this.getClass().getName(), IncorrectPasswordException.class);
+            throw new IncorrectPasswordException();
+        }
+        if (!userDto.getEmail().matches(EMAIL_REGEX)) {
+            log.error(this.getClass().getName(), IncorrectEmailException.class);
+            throw new IncorrectEmailException();
+        }
         userDto.setUserRole(UserRole.USER);
         UserEntity userEntity = userMapper.toEntity(userDto);
         userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
         userEntity.setMailVerifyToken(UUID.randomUUID());
+        if (turnOnMailVerification){
+            userEntity.setMailVerified(false);
+            MailVerifyDto mailVerifyDto = MailVerifyDto.builder()
+                    .name(userDto.getName())
+                    .surname(userDto.getSurname())
+                    .email(userDto.getEmail())
+                    .mailVerificationLink(MAIL_VERIFY_URL + userEntity.getMailVerifyToken())
+                    .build();
+            mailClient.sendMail(mailVerifyDto);
+        }else {
+            userEntity.setMailVerified(true);
+        }
         UserEntity save = userRepository.save(userEntity);
-        UserDto userDto1 = userMapper.toDto(save);
-        MailVerifyDto mailVerifyDto = MailVerifyDto.builder()
-                .name(userDto.getName())
-                .surname(userDto.getSurname())
-                .email(userDto.getEmail())
-                .mailVerificationLink(MAIL_VERIFY_URL + userEntity.getMailVerifyToken())
-                .build();
-        mailClient.sendMail(mailVerifyDto);
-        return userDto1;
+        transactionServiceClient.createBalance(save.getId());
+        return userMapper.toDto(save);
     }
 
 
@@ -116,6 +135,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public UserDto findByCard(UserDto userDto) {
+        if (userDto.getUserRole().equals(UserRole.USER)) {
+
+        }
+        return null;
     }
 
     @Override

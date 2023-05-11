@@ -1,0 +1,57 @@
+token:
+  secret: secret
+server:
+  port: 8090
+spring:
+  application:
+    name: gateway-server
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: 'true'
+          lower-case-service-id: 'true'
+
+      routes:
+
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+        - id: paymant-card-service
+          uri: lb://paymant-card-service
+          predicates:
+            - Path=/card/**, /api/v1/billing-addresses/**
+          filters:
+            - AuthFilter
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+        - id: mail-service
+          uri: lb://mail-service
+          predicates:
+            - Path=/mail/**
+          filters:
+            - AuthFilter
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/transaction/**, /transaction-history/**, /balance-history/**
+          filters:
+            - AuthFilter
+            - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+management:
+  security:
+    enabled: false
+  endpoint:
+    gateway:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: gateway
